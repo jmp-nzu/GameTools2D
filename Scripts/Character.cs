@@ -331,7 +331,7 @@ public class Character : MonoBehaviour
         float xSpeed = Mathf.Abs(rb.velocity.x); // 地面の移動と同じ
         bool isTurn = rb.velocity.x < 0 != movementInput.x < 0; // 地面の移動と同じ
         if (isTurn || xSpeed < speedLimit) {
-            rb.AddForce(movementInput * airAcceleration, ForceMode2D.Force);
+            rb.AddForce(Vector2.Scale(movementInput, Vector2.right) * airAcceleration, ForceMode2D.Force);
         }
     }
 
