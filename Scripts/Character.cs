@@ -11,8 +11,9 @@ namespace NZU {
 // Unityが自動的に追加してくれる。
 [RequireComponent(typeof(CapsuleCollider2D))]
 [RequireComponent(typeof(Rigidbody2D))] // Rigidbody2Dも同様に必須に
-[RequireComponent(typeof(PlayerInput))] // PlayerInputの同様に必須
-[RequireComponent(typeof(Animator))] // PlayerInputの同様に必須
+[RequireComponent(typeof(PlayerInput))] // PlayerInputも同様に必須
+[RequireComponent(typeof(Animator))] // PlayerInputも同様に必須
+[RequireComponent(typeof(SpriteRenderer))] // SpriteRendererも同様に必須
 public class Character : MonoBehaviour
 {
     // 以下の変数（プロパティ）は「public」として宣言されている。
@@ -37,7 +38,13 @@ public class Character : MonoBehaviour
 
     // 斜面に立つと加速度を補正することができる。
     public float slopeAccelerationAdjustment = 2f;
-    
+
+    public bool flipSprite = true; // キャラクターの移動方向に合わせてスプライトの向きを変えるか
+
+
+    // 以下のプロパティはpublicだが、インスペクタに表示されず、スクリプト専用
+    [HideInInspector]
+    public Vector2 forward = Vector2.right;    
 
     // 以下の変数（プロパティ）はゲームオブジェクトに付与されている
     // コンポーネントをアクセスするために用意する。このスクリプトで
@@ -46,6 +53,7 @@ public class Character : MonoBehaviour
     Rigidbody2D rb;
     PlayerInput playerInput;
     Animator animator;
+    SpriteRenderer spriteRenderer;
 
 
     // 以下の変数は内部処理用でスクリプトの外部からアクセスすることはない。
@@ -64,7 +72,6 @@ public class Character : MonoBehaviour
     Rigidbody2D groundRigidBody = null; // 地面のオブジェクトに付与されているRigidbody2D、ない場合はnull
 
     Vector2 movementInput; // プレーヤーが最後に入力した移動
-    PhysicsMaterial2D physicsMaterial; // 地面を移動する時の物理マテリアル
 
     // Startはゲームオブジェクトが生成された時に一度だけ実行される
     // Unityの標準メソッド（関数）。ここに初期化のコードを書く。
@@ -85,17 +92,7 @@ public class Character : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         playerInput = GetComponent<PlayerInput>();
         animator = GetComponent<Animator>();
-
-        // 物理マテリアルを記憶する。
-        // そのままRigidbody2DのsharedMaterialの参照を記憶すると、その物理マテリアル
-        // の値を変えてしまうと永久的に記憶されてしまうので、新しい物理マテリアルを用意して、
-        // 同じ値で初期化する。これで、frictionなどを自由に変えても他のオブジェクトなどに
-        // 影響がない。
-        physicsMaterial = new PhysicsMaterial2D();
-        physicsMaterial.friction = 0;
-        physicsMaterial.bounciness = 0;
-        // 最後に新しい物理マテリアルで入れ替える。
-        rb.sharedMaterial = physicsMaterial;
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     // UpdateはUnityの標準のメソッド（関数）で、ゲームの状態が更新される
@@ -139,9 +136,7 @@ public class Character : MonoBehaviour
             if (movementInput.magnitude > 0) {
                 ApplyGroundedMotion(); // ユーザーから移動の入力があった
             }
-            else {
-                Break(); // 移動入力がないのでブレーキをかける
-            }
+
             CounterGravity();
         }
         else { // 地面に立っていない
@@ -304,40 +299,6 @@ public class Character : MonoBehaviour
         lastGroundedVelocity = rb.velocity;
     }
 
-    // ブレーキをかける（動きを止める）
-    void Break()
-    {
-        if (!isJumping) { // ジャンプ中ではないなら...
-
-            // 地面の傾斜に対する右と左方向を計算
-            Vector2 right = new Vector2(groundNormal.y, -groundNormal.x);
-            Vector2 left = new Vector2(-groundNormal.y, groundNormal.x);
-
-            // 地面が動いている場合、完全に停止するのではなく、地面に対する動きだけを止めるので、
-            // 地面との相対的速度を計算する。
-            Vector2 relativeVelocity = rb.velocity;
-            if (groundRigidBody != null) {
-                relativeVelocity -= groundRigidBody.velocity;
-            }
-
-            float groundVelocity = Vector2.Dot(relativeVelocity, right); // 地面の傾斜に対する速度を計算する
-
-            float speed = Mathf.Abs(groundVelocity); // 速度
-            float direction = Mathf.Sign(groundVelocity); // 方向：-1は左、1は右
-
-            if (speed > 0) { // 動いている...
-                float force = breakForce; // 必要な力を取り敢えずデフォルトにする。
-                float maxForce = speed / Time.deltaTime; // 一瞬で止まるための力を計算...
-                if (force > maxForce) { // 力は必要以上に大きいので制限しないと逆方向に行ってしまう...
-                    force = maxForce; // 静止するための力にする。
-                }
-
-                // ブレーキする力をかける
-                rb.AddForce(left * direction * force, ForceMode2D.Force);
-                isBreaking = true;
-            }
-        }
-    }
 
     // 通常の物理演算では重力の影響を受けて斜面を滑ることがある。
     // このメソッドは滑らない様にキャラクターに力を加える。
@@ -376,12 +337,17 @@ public class Character : MonoBehaviour
 
     // この独自メソッドは入力アクションの「Jump」が実行された時に呼び出される。
     // ジャンプの開始命令になる。
-    void OnJump()
+    void OnJump(InputValue input)
     {
-        // キャラクターが地面に立っていないとジャンプできない。
-        // もし、ダブルジャンプなど、ジャンプができる条件を変えたいなら、
-        // ここのif文の条件を変える。
-        if (isGrounded) {
+        if (!input.isPressed)
+        {
+            isJumping = false;
+        }
+        else if (isGrounded) {
+            // キャラクターが地面に立っていないとジャンプできない。
+            // もし、ダブルジャンプなど、ジャンプができる条件を変えたいなら、
+            // ここのif文の条件を変える。
+
             // Rigidbodyはゲームオブジェクトの物理演算を行う。
             // ここで上方向（Vector2.up）に力を加えて、キャラクターをジャンプさせる。
             // 「ForceMode2D.Impulse」は単発的に力を加える事を意味する。
@@ -393,14 +359,6 @@ public class Character : MonoBehaviour
         }
     }
 
-    // この独自メソッドは入力アクションの「JumpEnd」が実行された時に呼び出される。
-    // ジャンプの終了命令になる。
-    void OnJumpEnd()
-    {
-        // ただ、ジャンプしているかどうかの情報を更新するだけでいい。
-        isJumping = false;
-    }
-
     // この独自メソッドは入力アクションの「Move」が実行された時に呼び出される。
     // 移動の制御に使う。
     void OnMove(InputValue input)
@@ -408,24 +366,25 @@ public class Character : MonoBehaviour
         // プレーヤーの入力をVector2形式として表す
         Vector2 moveDirection = input.Get<Vector2>();
         movementInput = moveDirection; // 入力を記憶する
+
+        if (Mathf.Abs(movementInput.x) > 0) {
+            if (movementInput.x > 0) {
+                forward = Vector2.right;
+            } else {
+                forward = Vector2.left;
+            }
+        }
+
+        if (flipSprite) {
+            spriteRenderer.flipX = forward.x < 0;
+        }
     }
 
     // ここからは入力に対する反応
 
     void OnRun(InputValue input)
     {
-        float val = input.Get<float>();
-        isRunning = val > 0;
-    }
-
-    void OnRunStart()
-    {
-        isRunning = true;
-    }
-
-    void OnRunEnd()
-    {
-        isRunning = false;
+        isRunning = input.isPressed;
     }
 
 } // クラス定義はここまで

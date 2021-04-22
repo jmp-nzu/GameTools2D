@@ -43,10 +43,7 @@ public class MovingPlatform : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector2 positionDelta = (Vector2)transform.position - lastPosition;
-
-        Vector2 speed = positionDelta / Time.fixedDeltaTime;
-        lastPosition = transform.position;
-        ghostRigidbody2D.velocity = speed;
+        ghostRigidbody2D.MovePosition(transform.position);
+        ghostRigidbody2D.MoveRotation(transform.rotation.eulerAngles.z);
     }
 }
