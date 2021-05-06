@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace NZU {
 
 // この１行で「Capsule Collider 2D」コンポーネントを必須にする。
 // このPlayerコンポーネントをゲームオブジェクトに付与した時に
@@ -41,6 +41,9 @@ public class Character : MonoBehaviour
 
     public bool flipSprite = true; // キャラクターの移動方向に合わせてスプライトの向きを変えるか
 
+    public Action OnDied;
+    public Action OnStart;
+
 
     // 以下のプロパティはpublicだが、インスペクタに表示されず、スクリプト専用
     [HideInInspector]
@@ -72,6 +75,24 @@ public class Character : MonoBehaviour
     Rigidbody2D groundRigidBody = null; // 地面のオブジェクトに付与されているRigidbody2D、ない場合はnull
 
     Vector2 movementInput; // プレーヤーが最後に入力した移動
+   
+
+
+    public void Respawn(Vector3 position)
+    {
+        transform.position = position;
+        animator.SetTrigger("respawn");
+    }
+
+    public void Die()
+    {
+        animator.SetTrigger("die");
+    }
+
+    void DieComplete()
+    {
+        OnDied?.Invoke();
+    }
 
     // Startはゲームオブジェクトが生成された時に一度だけ実行される
     // Unityの標準メソッド（関数）。ここに初期化のコードを書く。
@@ -93,6 +114,8 @@ public class Character : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        OnStart?.Invoke();
     }
 
     // UpdateはUnityの標準のメソッド（関数）で、ゲームの状態が更新される
@@ -335,6 +358,9 @@ public class Character : MonoBehaviour
         }
     }
 
+
+    // ここからは入力に対する反応
+
     // この独自メソッドは入力アクションの「Jump」が実行された時に呼び出される。
     // ジャンプの開始命令になる。
     void OnJump(InputValue input)
@@ -380,13 +406,9 @@ public class Character : MonoBehaviour
         }
     }
 
-    // ここからは入力に対する反応
-
     void OnRun(InputValue input)
     {
         isRunning = input.isPressed;
     }
 
 } // クラス定義はここまで
-
-} // namespaceはここまで
