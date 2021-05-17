@@ -1,11 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+ 
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class Inventory : MonoBehaviour
+public class Inventory : UniqueInstance
 {
-    Dictionary<string, int> items;
+    public Dictionary<string, int> items = new Dictionary<string, int>();
+    public HashSet<string> pickedUpItemIds = new HashSet<string>();
 
     [System.Serializable]
     public struct InventoryAction
@@ -18,12 +23,12 @@ public class Inventory : MonoBehaviour
 
     public InventoryAction[] actions;
 
-    public void AddItem(string type)
+    public void AddItem(string type, string uid)
     {
-        AddItems(type, 1);
+        AddItems(type, 1, uid);
     }
 
-    public void AddItems(string type, int count)
+    public void AddItems(string type, int count, string uid)
     {
         if (count < 0) { count = 0; }
 
@@ -36,6 +41,8 @@ public class Inventory : MonoBehaviour
             items[type] += count;
         }
 
+        pickedUpItemIds.Add(uid);
+
         foreach(InventoryAction action in actions)
         {
             if (action.item == type && items[type] >= action.count)
@@ -44,6 +51,20 @@ public class Inventory : MonoBehaviour
                 if (action.clearItems)
                 {
                     ClearItems(type);
+                }
+            }
+        }
+    }
+
+    public void ExecuteAllActions()
+    {
+        foreach (InventoryAction action in actions)
+        {
+            if (items.ContainsKey(action.item))
+            {
+                if (items[action.item] > action.count)
+                {
+                    action.actions.Invoke();
                 }
             }
         }
@@ -81,5 +102,10 @@ public class Inventory : MonoBehaviour
         {
             return 0;
         }
+    }
+
+    void Save(GameObject checkPoint)
+    {
+         SceneControl.singleton.SaveInventoryItems(this);
     }
 }
