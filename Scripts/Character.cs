@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+ 
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -11,7 +15,6 @@ using UnityEngine.InputSystem;
 // Unityが自動的に追加してくれる。
 [RequireComponent(typeof(CapsuleCollider2D))]
 [RequireComponent(typeof(Rigidbody2D))] // Rigidbody2Dも同様に必須に
-[RequireComponent(typeof(PlayerInput))] // PlayerInputも同様に必須
 [RequireComponent(typeof(Animator))] // PlayerInputも同様に必須
 [RequireComponent(typeof(SpriteRenderer))] // SpriteRendererも同様に必須
 public class Character : MonoBehaviour
@@ -92,6 +95,7 @@ public class Character : MonoBehaviour
     void DieComplete()
     {
         OnDied?.Invoke();
+        Destroy(gameObject);
     }
 
     // Startはゲームオブジェクトが生成された時に一度だけ実行される
@@ -132,6 +136,11 @@ public class Character : MonoBehaviour
         animator.SetBool("isRunning", isRunning);
         animator.SetBool("isGrounded", isGrounded);
         animator.SetBool("isBreaking", isBreaking);
+
+        if (flipSprite && spriteRenderer != null)
+        {
+            spriteRenderer.flipX = forward.x < 0;
+        }
     }
 
     // FixedUpdateはUpdateと同様にUnityの標準メソッド。Updateと違って、
@@ -365,11 +374,17 @@ public class Character : MonoBehaviour
     // ジャンプの開始命令になる。
     void OnJump(InputValue input)
     {
-        if (!input.isPressed)
+        OnJump(input.isPressed);
+    }
+
+    void OnJump(bool active)
+    {
+        if (!active)
         {
             isJumping = false;
         }
-        else if (isGrounded) {
+        else if (isGrounded)
+        {
             // キャラクターが地面に立っていないとジャンプできない。
             // もし、ダブルジャンプなど、ジャンプができる条件を変えたいなら、
             // ここのif文の条件を変える。
@@ -389,26 +404,39 @@ public class Character : MonoBehaviour
     // 移動の制御に使う。
     void OnMove(InputValue input)
     {
-        // プレーヤーの入力をVector2形式として表す
-        Vector2 moveDirection = input.Get<Vector2>();
+        OnMove(input.Get<Vector2>());
+    }
+
+    void OnMove(Vector2 moveDirection)
+    {
         movementInput = moveDirection; // 入力を記憶する
 
-        if (Mathf.Abs(movementInput.x) > 0) {
-            if (movementInput.x > 0) {
+        if (Mathf.Abs(movementInput.x) > 0)
+        {
+            if (movementInput.x > 0)
+            {
                 forward = Vector2.right;
-            } else {
+            }
+            else
+            {
                 forward = Vector2.left;
             }
-        }
-
-        if (flipSprite) {
-            spriteRenderer.flipX = forward.x < 0;
         }
     }
 
     void OnRun(InputValue input)
     {
-        isRunning = input.isPressed;
+        OnRun(input.isPressed);
+    }
+
+    void OnRun(bool value)
+    {
+        isRunning = value;
+    }
+
+    void Save(GameObject checkPoint)
+    {
+        SceneControl.singleton.SetSpawnPosition(this, checkPoint.transform.position);
     }
 
 } // クラス定義はここまで
