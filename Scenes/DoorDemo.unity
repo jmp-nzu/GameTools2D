@@ -414,7 +414,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de371aef90350d94a82b2b156c8d8818, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uid: 581c2ab7-83ab-4972-85e2-c2ae6e114957
+  uid: d570c9e0-23a7-4e41-856a-4e9bae2af8b6
   actions: []
 --- !u!4 &558773113 stripped
 Transform:
@@ -1021,7 +1021,7 @@ PrefabInstance:
     - target: {fileID: -1884881472801042044, guid: 8f435f9651fe54e74996d7be646924d5, type: 3}
       propertyPath: m_Actions
       value: 
-      objectReference: {fileID: -944628639613478452, guid: 846f4a6680c23f147a0cccd7f5be559a, type: 3}
+      objectReference: {fileID: -944628639613478452, guid: c3136df46490ff8448edd55685a67a74, type: 3}
     - target: {fileID: -1884881472801042044, guid: 8f435f9651fe54e74996d7be646924d5, type: 3}
       propertyPath: m_DefaultActionMap
       value: Player
