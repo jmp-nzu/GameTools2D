@@ -14,26 +14,18 @@ public class FaceMovementBehavior : MonoBehaviour
 
     Vector2 previousMovement = Vector2.zero;
 
-    Vector2 offset;
-    float length = 0;
-
-    private void Awake()
+    void Start()
     {
-        offset = transform.localPosition;
-        Vector2 v = offset;
-        if (ignoreXaxis)
-        {
-            v.x = 0;
-        }
-        if (ignoreYaxis)
-        {
-            v.y = 0;
-        }
-        length = v.magnitude;
+        
     }
 
     void OnMove(Vector2 moveDirection)
     {
+        if (!enabled)
+        {
+            return;
+        }
+
         if (ignoreXaxis)
         {
             moveDirection.x = 0;
@@ -46,15 +38,9 @@ public class FaceMovementBehavior : MonoBehaviour
         if (moveDirection.magnitude > 0 && moveDirection != previousMovement)
         {
             float angle = Mathf.Atan2(moveDirection.y, moveDirection.x);
-            Vector3 newLocalPosition = Vector3.zero;
-            Vector3 newEulerAngles = Vector3.zero;
-            if (ignoreXaxis) 
+            Vector3 newEulerAngles = transform.localEulerAngles;
+            if (!ignoreXaxis) 
             {
-                newLocalPosition.x = offset.x;
-            }
-            else
-            {
-                newLocalPosition.x = Mathf.Cos(angle) * length;
                 if (moveDirection.x < 0)
                 {
                     newEulerAngles.y = 180;
@@ -64,17 +50,11 @@ public class FaceMovementBehavior : MonoBehaviour
                     newEulerAngles.y = 0;
                 }
             }
-            if (ignoreYaxis)
+            if (!ignoreYaxis)
             {
-                newLocalPosition.y = offset.y;
-            }
-            else
-            {
-                newLocalPosition.y = Mathf.Sin(angle) * length;
                 newEulerAngles.z = Mathf.Asin(moveDirection.y) * 180f / Mathf.PI;
             }
 
-            transform.localPosition = newLocalPosition;
             transform.localEulerAngles = newEulerAngles;
 
             previousMovement = moveDirection;
