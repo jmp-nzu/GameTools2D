@@ -14,17 +14,20 @@ public class Gun : MonoBehaviour
     public bool limitAmmo = false;
     public int ammo = 0;
     public float reloadTime = 0;
-    public Transform bulletOffset = null;
 
     float lastFireTime = 0;
 
     Vector3 offset;
     Vector3 rotation = Vector3.zero;
 
+    Collider2D[] colliders;
+
     void Start()
     {
         offset = transform.localPosition;
         rotation = transform.eulerAngles;
+
+        colliders = GetComponentsInParent<Collider2D>();
     }
 
     public void Fire()
@@ -39,16 +42,20 @@ public class Gun : MonoBehaviour
             if (bulletPrefab)
             {
                 GameObject bullet = Instantiate(bulletPrefab);
-                if (bulletOffset)
+                bullet.transform.position = transform.position;
+
+                Collider2D[] bulletColliders = bullet.GetComponents<Collider2D>();
+
+                foreach(Collider2D c1 in colliders)
                 {
-                    bullet.transform.position = bulletOffset.position;
-                }
-                else
-                {
-                    bullet.transform.position = transform.position;
+                    foreach(Collider2D c2 in bulletColliders)
+                    {
+                        Physics2D.IgnoreCollision(c1, c2);
+                    }
                 }
 
                 Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+
                 if (rb)
                 {
                     rb.velocity = (Vector2)transform.right * bulletSpeed;
