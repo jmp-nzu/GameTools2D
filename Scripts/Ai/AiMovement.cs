@@ -15,12 +15,11 @@ public class AiMovement : AiInput
     public void Turn()
     {
         direction = new Vector2(-direction.x, direction.y);
-        // Send(direction);
     }
 
     void OnEnable()
     {
-        // Send(direction);
+        
     }
 
     // Start is called before the first frame update

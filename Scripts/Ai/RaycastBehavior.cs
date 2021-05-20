@@ -11,7 +11,6 @@ public class RaycastBehavior : MonoBehaviour
 {
     public float directionDegrees = 0;
     public float length = 3;
-    public bool followMovement = true;
 
     public string targetTag = "";
 
