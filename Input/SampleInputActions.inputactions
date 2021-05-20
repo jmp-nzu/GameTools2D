@@ -1,5 +1,5 @@
 {
-    "name": "DigitalGameDesign2021",
+    "name": "SampleInputActions",
     "maps": [
         {
             "name": "Player",
@@ -263,6 +263,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "XR",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "85685676-c830-4fe1-b2bc-c6b28ff39301",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "Fire",
                     "isComposite": false,
                     "isPartOfComposite": false

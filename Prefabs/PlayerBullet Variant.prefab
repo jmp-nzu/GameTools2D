@@ -61,7 +61,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3901689264965677627, guid: c4bef3d0cd199c241b494949e85afed9, type: 3}
       propertyPath: m_Name
-      value: PlayerBullet
+      value: PlayerBullet Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 5448294199395456986, guid: c4bef3d0cd199c241b494949e85afed9, type: 3}
+      propertyPath: m_GravityScale
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c4bef3d0cd199c241b494949e85afed9, type: 3}
